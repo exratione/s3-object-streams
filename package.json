@@ -1,0 +1,37 @@
+{
+  "name": "s3-object-streams",
+  "description": "For streaming the listing of large S3 buckets.",
+  "keywords": [
+    "s3",
+    "stream"
+  ],
+  "version": "0.1.0",
+  "homepage": "https://github.com/exratione/s3-object-streams",
+  "author": "Reason <reason@exratione.com>",
+  "engines": {
+    "node": ">= 6.9.1"
+  },
+  "dependencies": {
+    "async": "2.1.2",
+    "aws-sdk": "2.6.15",
+    "lodash": "4.16.6"
+  },
+  "devDependencies": {
+    "chai": "3.5.0",
+    "grunt": "1.0.1",
+    "grunt-eslint": "19.0.0",
+    "grunt-mocha-test": "0.13.2",
+    "mocha": "3.1.2",
+    "sinon": "1.17.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/exratione/s3-object-streams"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/exratione/s3-object-streams/raw/master/LICENSE"
+    }
+  ]
+}
