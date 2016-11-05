@@ -19,17 +19,17 @@ describe('lib/stream/S3UsageStream', function () {
     s3Objects = [
       {
         Bucket: 'bucket',
-        Key: 'a/b/1',
+        Key: 'a/b/c/d/1',
         Size: 10
       },
       {
         Bucket: 'bucket',
-        Key: 'a/b/2',
+        Key: 'a/b/c/d/2',
         Size: 20
       },
       {
         Bucket: 'bucket',
-        Key: 'a/b/3',
+        Key: 'a/b/c/d/3',
         Size: 30
       }
     ];
