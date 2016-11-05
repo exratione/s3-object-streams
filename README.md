@@ -10,7 +10,7 @@ fairly compact utility code.
 An object stream that pipes in configuration objects for listing the contents of
 an S3 bucket, and pipes out S3 object definitions.
 
-```
+```js
 var AWS = require('aws-sdk');
 var s3ObjectStreams = require('s3-object-streams');
 
@@ -50,7 +50,7 @@ A stream for keeping a running total of count and size of listed S3 objects by
 bucket and key prefix. Useful for applications with a UI that needs to track
 progress.
 
-```
+```js
 var AWS = require('aws-sdk');
 var s3ObjectStreams = require('s3-object-streams');
 
