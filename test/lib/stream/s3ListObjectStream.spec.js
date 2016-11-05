@@ -1,5 +1,5 @@
 /**
- * @fileOverview Tests for listObjectStream.
+ * @fileOverview Tests for lib/stream/s3ListObjectStream.
  */
 
 // NPM.
@@ -8,7 +8,7 @@ var AWS = require('aws-sdk');
 // Local.
 var S3ListObjectStream = require('../../../lib/stream/s3ListObjectStream');
 
-describe('lib/listObjectStream', function () {
+describe('lib/stream/s3ListObjectStream', function () {
   var listObjectResponse1;
   var listObjectResponse2;
   var sandbox;
@@ -46,10 +46,22 @@ describe('lib/listObjectStream', function () {
     };
 
     s3Objects = [
-      listObjectResponse1.Contents[0],
-      listObjectResponse1.Contents[1],
-      listObjectResponse2.Contents[0],
-      listObjectResponse2.Contents[1]
+      {
+        Bucket: 'bucket',
+        Key: 'a1'
+      },
+      {
+        Bucket: 'bucket',
+        Key: 'a2'
+      },
+      {
+        Bucket: 'bucket',
+        Key: 'b1'
+      },
+      {
+        Bucket: 'bucket',
+        Key: 'b2'
+      }
     ];
 
     s3Client = new AWS.S3();

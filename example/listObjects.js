@@ -1,5 +1,5 @@
 /**
- * @fileOverview A simple example for listing objects.
+ * @fileOverview A simple example to list objects.
  */
 
 // NPM.
