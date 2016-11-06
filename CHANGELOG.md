@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+  * Add the S3ConcurrentListObjectStream class.
+
 ## 0.2.0
 
   * Add an outputFactor configuration parameter to S3UsageStream.
