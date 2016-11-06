@@ -6,14 +6,18 @@
 var S3UsageStream = require('../../../lib/stream/s3UsageStream');
 
 describe('lib/stream/S3UsageStream', function () {
+  var sandbox;
   var s3Objects;
   var usageObjects;
   var s3UsageStream;
 
   beforeEach(function () {
+    sandbox = sinon.sandbox.create();
+
     s3UsageStream = new S3UsageStream({
       delimiter: '/',
-      depth: 2
+      depth: 2,
+      outputFactor: 1
     });
 
     s3Objects = [
@@ -86,26 +90,62 @@ describe('lib/stream/S3UsageStream', function () {
         }
       ]
     ];
+
+    // The s3UsageStream emits an extra duplicate of the final event on the end
+    // event for outputFactor 1.
+    usageObjects.push(usageObjects[2]);
+  });
+
+
+  afterEach(function () {
+    sandbox.restore();
   });
 
   describe('updateTotals', function () {
-    var totals;
+    it('functions as expected for outputFactor 1 and default depth, delimiter', function () {
+      s3UsageStream = new S3UsageStream({
+        outputFactor: 1
+      });
+      sandbox.stub(s3UsageStream, 'push');
+      s3UsageStream.updateTotals(s3Objects[0]);
 
-    it('functions as expected for default depth, delimiter', function () {
-      s3UsageStream = new S3UsageStream();
-      totals = s3UsageStream.updateTotals(s3Objects[0]);
-      expect(totals).to.eql([
-        {
-          path: 'bucket',
-          count: 1,
-          size: 10
-        }
-      ]);
+      sinon.assert.calledWith(
+        s3UsageStream.push,
+        [
+          {
+            path: 'bucket',
+            count: 1,
+            size: 10
+          }
+        ]
+      );
     });
 
-    it('functions as expected for delimiter /, depth 2', function () {
-      totals = s3UsageStream.updateTotals(s3Objects[0]);
-      expect(totals).to.eql(usageObjects[0]);
+    it('functions as expected for outputFactor 2, delimiter /, depth 2', function () {
+      s3UsageStream = new S3UsageStream({
+        depth: 2,
+        outputFactor: 2
+      });
+      sandbox.stub(s3UsageStream, 'push');
+
+      s3UsageStream.updateTotals(s3Objects[0])
+      sinon.assert.notCalled(s3UsageStream.push);
+
+      s3UsageStream.updateTotals(s3Objects[1]);
+      sinon.assert.calledWith(
+        s3UsageStream.push,
+        usageObjects[1]
+      );
+    });
+
+    it('functions as expected for outputFactor 1, delimiter /, depth 2', function () {
+      sandbox.stub(s3UsageStream, 'push');
+      s3UsageStream.updateTotals(s3Objects[0]);
+
+      sinon.assert.calledWith(
+        s3UsageStream.push,
+        usageObjects[0]
+      );
     });
   });
 
