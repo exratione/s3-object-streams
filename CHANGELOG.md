@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+  * Add retry on error to S3 API operations.
+
 ## 0.3.0
 
   * Add the S3ConcurrentListObjectStream class.
