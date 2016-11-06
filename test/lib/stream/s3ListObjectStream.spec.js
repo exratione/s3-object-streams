@@ -105,10 +105,14 @@ describe('lib/stream/s3ListObjectStream', function () {
       });
     });
 
-    it('yields errors appropriately', function (done) {
+    it('retries on errors and yields errors appropriately', function (done) {
+      // Errors to get past the retry.
       s3Client.listObjects.onCall(0).yields(new Error());
+      s3Client.listObjects.onCall(1).yields(new Error());
+      s3Client.listObjects.onCall(2).yields(new Error());
 
       s3ListObjectStream.listObjectsPage(options, function (error) {
+        sinon.assert.callCount(s3Client.listObjects, 3);
         expect(error).to.be.instanceOf(Error);
         done();
       });
@@ -165,6 +169,8 @@ describe('lib/stream/s3ListObjectStream', function () {
 
     it('yields error for failed API call', function (done) {
       s3Client.listObjects.onCall(0).yields(new Error());
+      s3Client.listObjects.onCall(1).yields(new Error());
+      s3Client.listObjects.onCall(2).yields(new Error());
 
       s3ListObjectStream.listObjects(options, function (error) {
         expect(error).to.be.instanceOf(Error);
@@ -257,6 +263,8 @@ describe('lib/stream/s3ListObjectStream', function () {
 
     it('emits errors appropriately', function (done) {
       s3Client.listObjects.onCall(0).yields(new Error());
+      s3Client.listObjects.onCall(1).yields(new Error());
+      s3Client.listObjects.onCall(2).yields(new Error());
 
       s3ListObjectStream.on('error', function (error) {
         expect(error).to.be.instanceOf(Error);

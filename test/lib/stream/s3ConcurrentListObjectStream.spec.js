@@ -91,10 +91,13 @@ describe('lib/stream/s3ConcurrentListObjectStream', function () {
 
     it('yields error on API error', function (done) {
       s3Client.listObjects.onCall(0).yields(new Error());
+      s3Client.listObjects.onCall(1).yields(new Error());
+      s3Client.listObjects.onCall(2).yields(new Error());
 
       s3ConcurrentListObjectStream.listCommonPrefixesPage(
         options,
         function (error, nextMarker, commonPrefixes) {
+          sinon.assert.callCount(s3Client.listObjects, 3);
           expect(error).to.be.instanceOf(Error);
           done();
         }
@@ -143,12 +146,15 @@ describe('lib/stream/s3ConcurrentListObjectStream', function () {
       );
     });
 
-    it('yields error on API error', function (done) {
+    it('retries and yields error on API error', function (done) {
       s3Client.listObjects.onCall(0).yields(new Error());
+      s3Client.listObjects.onCall(1).yields(new Error());
+      s3Client.listObjects.onCall(2).yields(new Error());
 
       s3ConcurrentListObjectStream.listCommonPrefixes(
         options,
         function (error, commonPrefixes) {
+          sinon.assert.callCount(s3Client.listObjects, 3);
           expect(error).to.be.instanceOf(Error);
           done();
         }
