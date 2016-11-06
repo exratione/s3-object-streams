@@ -5,6 +5,14 @@ large S3 buckets, those containing millions of objects or more. Streaming the
 listed contents keeps memory under control and using the Streams API allows for
 fairly compact utility code.
 
+## Installing
+
+Obtain via NPM:
+
+```
+npm install s3-object-streams
+```
+
 ## S3ListObjectStream
 
 An object stream that pipes in configuration objects for listing the contents of
@@ -42,6 +50,49 @@ s3ListObjectStream.write({
   bucket: 'exampleBucket2'
 });
 s3ListObjectStream.end();
+```
+
+## S3ConcurrentListObjectStream
+
+This works in the same way as the `S3ListObjectStream`, but under the hood it
+splits up the bucket by common prefixes and then lists objects under each
+common prefix concurrently. This is usually much faster, provided the keys in
+the bucket have decent number of common prefixes.
+
+```js
+var AWS = require('aws-sdk');
+var s3ObjectStreams = require('s3-object-streams');
+
+var s3ConcurrentListObjectStream = new s3ObjectStreams.S3ConcurrentListObjectStream();
+var s3Client = new AWS.S3();
+
+// Log all of the listed objects.
+s3ConcurrentListObjectStream.on('data', function (s3Object) {
+  console.info(s3Object);
+});
+s3ConcurrentListObjectStream.on('end', function () {
+  console.info('Listing complete.')
+});
+s3ConcurrentListObjectStream.on('error', function (error) {
+  console.error(error);
+});
+
+// List the contents of a couple of different buckets.
+s3ConcurrentListObjectStream.write({
+  s3Client: s3Client,
+  bucket: 'exampleBucket1',
+  // Optional, only list keys with the given prefix.
+  prefix: 'examplePrefix',
+  // Optional, defaults to 10.
+  maxConcurrency: 10,
+  // Optional, defaults to 1000. The number of objects per request.
+  maxKeys: 1000
+});
+s3ConcurrentListObjectStream.write({
+  s3Client: s3Client,
+  bucket: 'exampleBucket2'
+});
+s3ConcurrentListObjectStream.end();
 ```
 
 ## S3UsageStream
@@ -92,4 +143,3 @@ s3ListObjectStream.write({
 });
 s3ListObjectStream.end();
 ```
-

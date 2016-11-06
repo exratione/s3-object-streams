@@ -1,6 +1,6 @@
 {
   "name": "s3-object-streams",
-  "description": "For streaming the listing of large S3 buckets.",
+  "description": "Tools for streaming the listing of large S3 buckets.",
   "keywords": [
     "aws",
     "s3",

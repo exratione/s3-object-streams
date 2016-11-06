@@ -1,6 +1,13 @@
 /**
- * @fileOverview Exposing classes.
+ * @fileOverview Main interface to the package.
  */
 
-exports.S3ListObjectStream = require('./lib/stream/s3ListObjectStream');
-exports.S3UsageStream = require('./lib/stream/s3UsageStream');
+// Local.
+var S3ListObjectStream = require('./lib/stream/s3ListObjectStream');
+var S3ConcurrentListObjectStream = require('./lib/stream/s3ConcurrentListObjectStream');
+var S3UsageStream = require('./lib/stream/s3UsageStream');
+
+// Expose the constructors.
+exports.S3ListObjectStream = S3ListObjectStream;
+exports.S3ConcurrentListObjectStream = S3ConcurrentListObjectStream;
+exports.S3UsageStream = S3UsageStream;

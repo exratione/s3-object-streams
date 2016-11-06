@@ -85,7 +85,7 @@ describe('lib/stream/s3ListObjectStream', function () {
         prefix: 'prefix',
         marker: 'marker',
         maxKeys: 50
-      }
+      };
     });
 
     it('functions as expected', function (done) {
@@ -163,14 +163,39 @@ describe('lib/stream/s3ListObjectStream', function () {
       });
     });
 
-    it('yields errors appropriately', function (done) {
+    it('yields error for failed API call', function (done) {
       s3Client.listObjects.onCall(0).yields(new Error());
 
       s3ListObjectStream.listObjects(options, function (error) {
         expect(error).to.be.instanceOf(Error);
         done();
       });
-    })
+    });
+
+    it('yields error for missing options', function (done) {
+      s3ListObjectStream.listObjects(null, function (error) {
+        expect(error).to.be.instanceOf(Error);
+        done();
+      });
+    });
+
+    it('yields error for missing options.s3Client', function (done) {
+      delete options.s3Client;
+
+      s3ListObjectStream.listObjects(options, function (error) {
+        expect(error).to.be.instanceOf(Error);
+        done();
+      });
+    });
+
+    it('yields error for missing options.bucket', function (done) {
+      delete options.bucket;
+
+      s3ListObjectStream.listObjects(options, function (error) {
+        expect(error).to.be.instanceOf(Error);
+        done();
+      });
+    });
   });
 
   describe('streaming', function () {
