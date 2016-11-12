@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+  * Fix issue with passing in `prefix/` rather than `prefix`.
+
 ## 0.4.0
 
   * Add retry on error to S3 API operations.
