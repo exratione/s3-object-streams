@@ -57,7 +57,7 @@ s3ListObjectStream.end();
 This works in the same way as the `S3ListObjectStream`, but under the hood it
 splits up the bucket by common prefixes and then lists objects under each
 common prefix concurrently. This is usually much faster, provided the keys in
-the bucket have decent number of common prefixes.
+the bucket have a decent number of common prefixes.
 
 ```js
 var AWS = require('aws-sdk');

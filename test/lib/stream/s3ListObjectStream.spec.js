@@ -131,7 +131,7 @@ describe('lib/stream/s3ListObjectStream', function () {
     });
 
     it('functions as expected', function (done) {
-      sinon.stub(s3ListObjectStream, 'push');
+      sandbox.stub(s3ListObjectStream, 'push');
 
       s3ListObjectStream.listObjects(options, function (error) {
         sinon.assert.callCount(s3Client.listObjects, 2);
