@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+
+  * Further fixing of the S3ConcurrentListObjectStream.
+
 ## 0.4.1
 
   * Fix issue with passing in `prefix/` rather than `prefix`.
