@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+  * Split out usage counts by storage class.
+
 ## 0.4.2
 
   * Further fixing of the S3ConcurrentListObjectStream.
