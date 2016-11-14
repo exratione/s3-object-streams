@@ -24,10 +24,10 @@ var runningTotals;
 // Log all of the listed objects.
 s3UsageStream.on('data', function (totals) {
   runningTotals = totals;
-  console.info(runningTotals);
+  console.info(JSON.stringify(runningTotals, null, '  '));
 });
 s3UsageStream.on('end', function () {
-  console.info('Final total: ', runningTotals);
+  console.info('Final total: ', JSON.stringify(runningTotals, null, '  '));
 });
 s3UsageStream.on('error', function (error) {
   console.error(error);

@@ -3,6 +3,7 @@
  */
 
 // Local.
+var constants = require('../../../lib/constants');
 var S3UsageStream = require('../../../lib/stream/s3UsageStream');
 
 describe('lib/stream/S3UsageStream', function () {
@@ -23,72 +24,183 @@ describe('lib/stream/S3UsageStream', function () {
     s3Objects = [
       {
         Bucket: 'bucket',
-        Key: 'a/b/c/d/1',
-        Size: 10
+        Key: 'a/b/c/1',
+        Size: 10,
+        StorageClass: constants.storageClass.STANDARD
       },
       {
         Bucket: 'bucket',
-        Key: 'a/b/c/d/2',
-        Size: 20
+        Key: 'a/b/c/2',
+        Size: 20,
+        StorageClass: constants.storageClass.STANDARD
       },
       {
         Bucket: 'bucket',
-        Key: 'a/b/c/d/3',
-        Size: 30
+        Key: 'a/b/c/3',
+        Size: 30,
+        StorageClass: constants.storageClass.GLACIER
       }
     ];
     usageObjects = [
       [
         {
           path: 'bucket',
-          count: 1,
-          size: 10
+          storageClass: {
+            STANDARD: {
+              count: 1,
+              size: 10
+            },
+            REDUCED_REDUNDANCY: {
+              count: 0,
+              size: 0
+            },
+            GLACIER: {
+              count: 0,
+              size: 0
+            }
+          }
         },
         {
           path: 'bucket/a',
-          count: 1,
-          size: 10
+          storageClass: {
+            STANDARD: {
+              count: 1,
+              size: 10
+            },
+            REDUCED_REDUNDANCY: {
+              count: 0,
+              size: 0
+            },
+            GLACIER: {
+              count: 0,
+              size: 0
+            }
+          }
         },
         {
           path: 'bucket/a/b',
-          count: 1,
-          size: 10
+          storageClass: {
+            STANDARD: {
+              count: 1,
+              size: 10
+            },
+            REDUCED_REDUNDANCY: {
+              count: 0,
+              size: 0
+            },
+            GLACIER: {
+              count: 0,
+              size: 0
+            }
+          }
         }
       ],
       [
         {
           path: 'bucket',
-          count: 2,
-          size: 30
+          storageClass: {
+            STANDARD: {
+              count: 2,
+              size: 30
+            },
+            REDUCED_REDUNDANCY: {
+              count: 0,
+              size: 0
+            },
+            GLACIER: {
+              count: 0,
+              size: 0
+            }
+          }
         },
         {
           path: 'bucket/a',
-          count: 2,
-          size: 30
+          storageClass: {
+            STANDARD: {
+              count: 2,
+              size: 30
+            },
+            REDUCED_REDUNDANCY: {
+              count: 0,
+              size: 0
+            },
+            GLACIER: {
+              count: 0,
+              size: 0
+            }
+          }
         },
         {
           path: 'bucket/a/b',
-          count: 2,
-          size: 30
+          storageClass: {
+            STANDARD: {
+              count: 2,
+              size: 30
+            },
+            REDUCED_REDUNDANCY: {
+              count: 0,
+              size: 0
+            },
+            GLACIER: {
+              count: 0,
+              size: 0
+            }
+          }
         }
       ],
       [
         {
           path: 'bucket',
-          count: 3,
-          size: 60
+          storageClass: {
+            STANDARD: {
+              count: 2,
+              size: 30
+            },
+            REDUCED_REDUNDANCY: {
+              count: 0,
+              size: 0
+            },
+            GLACIER: {
+              count: 1,
+              size: 30
+            }
+          }
         },
         {
           path: 'bucket/a',
-          count: 3,
-          size: 60
+          storageClass: {
+            STANDARD: {
+              count: 2,
+              size: 30
+            },
+            REDUCED_REDUNDANCY: {
+              count: 0,
+              size: 0
+            },
+            GLACIER: {
+              count: 1,
+              size: 30
+            }
+          }
         },
         {
           path: 'bucket/a/b',
-          count: 3,
-          size: 60
+          storageClass: {
+            STANDARD: {
+              count: 2,
+              size: 30
+            },
+            REDUCED_REDUNDANCY: {
+              count: 0,
+              size: 0
+            },
+            GLACIER: {
+              count: 1,
+              size: 30
+            }
+          }
         }
-      ]
+      ],
     ];
 
     // The s3UsageStream emits an extra duplicate of the final event on the end
@@ -96,56 +208,88 @@ describe('lib/stream/S3UsageStream', function () {
     usageObjects.push(usageObjects[2]);
   });
 
-
   afterEach(function () {
     sandbox.restore();
   });
 
   describe('updateTotals', function () {
-    it('functions as expected for outputFactor 1 and default depth, delimiter', function () {
+
+    beforeEach(function () {
+      sandbox.stub(s3UsageStream, 'push');
+    });
+
+    it('functions as expected for outputFactor 1 and default depth, delimiter', function (done) {
       s3UsageStream = new S3UsageStream({
         outputFactor: 1
       });
       sandbox.stub(s3UsageStream, 'push');
-      s3UsageStream.updateTotals(s3Objects[0]);
 
-      sinon.assert.calledWith(
-        s3UsageStream.push,
-        [
-          {
-            path: 'bucket',
-            count: 1,
-            size: 10
-          }
-        ]
-      );
+      s3UsageStream.updateTotals(s3Objects[0], function (error) {
+        sinon.assert.calledWith(
+          s3UsageStream.push,
+          [
+            {
+              path: 'bucket',
+              storageClass: {
+                STANDARD: {
+                  count: 1,
+                  size: 10
+                },
+                REDUCED_REDUNDANCY: {
+                  count: 0,
+                  size: 0
+                },
+                GLACIER: {
+                  count: 0,
+                  size: 0
+                }
+              }
+            }
+          ]
+        );
+
+        done(error);
+      });
     });
 
-    it('functions as expected for outputFactor 2, delimiter /, depth 2', function () {
+    it('functions as expected for outputFactor 2, delimiter /, depth 2', function (done) {
       s3UsageStream = new S3UsageStream({
         depth: 2,
         outputFactor: 2
       });
       sandbox.stub(s3UsageStream, 'push');
 
-      s3UsageStream.updateTotals(s3Objects[0])
-      sinon.assert.notCalled(s3UsageStream.push);
+      s3UsageStream.updateTotals(s3Objects[0], function (error) {
+        sinon.assert.notCalled(s3UsageStream.push);
 
-      s3UsageStream.updateTotals(s3Objects[1]);
-      sinon.assert.calledWith(
-        s3UsageStream.push,
-        usageObjects[1]
-      );
+        s3UsageStream.updateTotals(s3Objects[1], function (error) {
+          sinon.assert.calledWith(
+            s3UsageStream.push,
+            usageObjects[1]
+          );
+          done(error);
+        });
+      });
     });
 
-    it('functions as expected for outputFactor 1, delimiter /, depth 2', function () {
-      sandbox.stub(s3UsageStream, 'push');
-      s3UsageStream.updateTotals(s3Objects[0]);
+    it('functions as expected for outputFactor 1, delimiter /, depth 2', function (done) {
+      s3UsageStream.updateTotals(s3Objects[0], function (error) {
+        sinon.assert.calledWith(
+          s3UsageStream.push,
+          usageObjects[0]
+        );
+        done();
+      });
+    });
 
-      sinon.assert.calledWith(
-        s3UsageStream.push,
-        usageObjects[0]
-      );
+    it('yields error for unrecognized storage class', function (done) {
+      s3Objects[0].StorageClass = 'UNKNOWN';
+
+      s3UsageStream.updateTotals(s3Objects[0], function (error) {
+        expect(error).to.be.instanceOf(Error);
+        done();
+      });
+
     });
   });
 

@@ -41,7 +41,7 @@ s3ListObjectStream.write({
   s3Client: s3Client,
   bucket: 'exampleBucket1',
   // Optional, only list keys with the given prefix.
-  prefix: 'examplePrefix',
+  prefix: 'examplePrefix/',
   // Optional, defaults to 1000. The number of objects per request.
   maxKeys: 1000
 });
@@ -50,6 +50,23 @@ s3ListObjectStream.write({
   bucket: 'exampleBucket2'
 });
 s3ListObjectStream.end();
+```
+
+Objects emitted by the stream have the standard format, with the addition of a
+`Bucket` property:
+
+```js
+{
+  Bucket: 'exampleBucket1',
+  Key: 'examplePrefix/file.txt',
+  LastModified: Date.now(),
+  ETag: 'tag string',
+  Size: 200,
+  StorageClass: 'STANDARD',
+  Owner: {
+    DisplayName: 'exampleowner',
+    ID: 'owner ID'
+  }
 ```
 
 ## S3ConcurrentListObjectStream
@@ -82,7 +99,7 @@ s3ConcurrentListObjectStream.write({
   s3Client: s3Client,
   bucket: 'exampleBucket1',
   // Optional, only list keys with the given prefix.
-  prefix: 'examplePrefix',
+  prefix: 'examplePrefix/',
   // Optional, defaults to 10.
   maxConcurrency: 10,
   // Optional, defaults to 1000. The number of objects per request.
@@ -93,6 +110,23 @@ s3ConcurrentListObjectStream.write({
   bucket: 'exampleBucket2'
 });
 s3ConcurrentListObjectStream.end();
+```
+
+Objects emitted by the stream have the standard format, with the addition of a
+`Bucket` property:
+
+```js
+{
+  Bucket: 'exampleBucket1',
+  Key: 'examplePrefix/file.txt',
+  LastModified: Date.now(),
+  ETag: 'tag string',
+  Size: 200,
+  StorageClass: 'STANDARD',
+  Owner: {
+    DisplayName: 'exampleowner',
+    ID: 'owner ID'
+  }
 ```
 
 ## S3UsageStream
@@ -142,4 +176,28 @@ s3ListObjectStream.write({
   bucket: 'exampleBucket2'
 });
 s3ListObjectStream.end();
+```
+
+The running total objects emitted by the stream have the following format:
+
+```js
+{
+  path: 'exampleBucket/folder1',
+  storageClass: {
+    STANDARD: {
+      // The number of files of this storage class.
+      count: 55,
+      // Total size in bytes of files in this storage class.
+      size: 1232983
+    },
+    REDUCED_REDUNDANCY: {
+      count: 2,
+      size: 5638
+    },
+    GLACIER: {
+      count: 0,
+      size: 0
+    }
+  }
+}
 ```
