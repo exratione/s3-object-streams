@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+  * A better algorithm for concurrent listing.
+
 ## 0.5.0
 
   * Split out usage counts by storage class.
