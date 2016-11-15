@@ -4,14 +4,14 @@
 
 // NPM.
 var AWS = require('aws-sdk');
+var _ = require('lodash');
 
 // Local.
 var S3ConcurrentListObjectStream = require('../../../lib/stream/s3ConcurrentListObjectStream');
 
 describe('lib/stream/s3ConcurrentListObjectStream', function () {
-  var listCommonPrefixesResponse1;
-  var listCommonPrefixesResponse2;
-  var allCommonPrefixes;
+  var listObjectsResponse1;
+  var listObjectsResponse2;
   var prefix;
   var sandbox;
   var s3Client;
@@ -21,46 +21,42 @@ describe('lib/stream/s3ConcurrentListObjectStream', function () {
     sandbox = sinon.sandbox.create();
 
     s3Client = new AWS.S3();
-    sandbox.stub(s3Client, 'listObjects');
     prefix = 'prefix/';
 
-    listCommonPrefixesResponse1 = {
+    listObjectsResponse1 = {
       IsTruncated: true,
-      NextMarker: 'marker',
+      NextContinuationToken: 'token',
       CommonPrefixes: [
-        { Prefix: prefix + 'a/z/' },
-        { Prefix: prefix + 'b/y/' }
+        { Prefix: prefix + 'b/' },
+        { Prefix: prefix + 'c/' }
       ],
       Contents: [
         {
-          Key: 'a1'
+          Key: prefix + 'a1'
         },
         {
-          Key: 'a2'
+          Key: prefix + 'a2'
         }
       ]
     };
-    listCommonPrefixesResponse2 = {
+    listObjectsResponse2 = {
       IsTruncated: false,
       CommonPrefixes: [
-        { Prefix: prefix + 'c/x/' },
-        { Prefix: prefix + 'd/w/' }
+        { Prefix: prefix + 'b/' },
+        { Prefix: prefix + 'c/' }
       ],
-      Contents: []
+      Contents: [
+        {
+          Key: prefix + 'a3'
+        }
+      ]
     };
 
-    allCommonPrefixes = [
-      prefix + 'a/z/',
-      prefix + 'b/y/',
-      prefix + 'c/x/',
-      prefix + 'd/w/'
-    ];
-
-    s3Client.listObjects.onCall(0).yields(null, listCommonPrefixesResponse1);
-    s3Client.listObjects.onCall(1).yields(null, listCommonPrefixesResponse2);
+    sandbox.stub(s3Client, 'listObjectsV2');
+    s3Client.listObjectsV2.onCall(0).yields(null, listObjectsResponse1);
+    s3Client.listObjectsV2.onCall(1).yields(null, listObjectsResponse2);
 
     s3ConcurrentListObjectStream = new S3ConcurrentListObjectStream();
-    sandbox.stub(s3ConcurrentListObjectStream, 'listObjects').yields();
     sandbox.stub(s3ConcurrentListObjectStream, 'push');
   });
 
@@ -68,7 +64,7 @@ describe('lib/stream/s3ConcurrentListObjectStream', function () {
     sandbox.restore();
   });
 
-  describe('listCommonPrefixesPage', function () {
+  describe('listDirectoryPage', function () {
     var options;
 
     beforeEach(function () {
@@ -76,31 +72,33 @@ describe('lib/stream/s3ConcurrentListObjectStream', function () {
         s3Client: s3Client,
         bucket: 'bucket',
         delimiter: '/',
-        prefix: 'prefix',
-        marker: 'marker',
+        prefix: 'prefix/',
+        continuationToken: 'token',
         maxKeys: 50
       };
     });
 
     it('functions as expected', function (done) {
-      s3ConcurrentListObjectStream.listCommonPrefixesPage(
+      s3ConcurrentListObjectStream.listDirectoryPage(
         options,
-        function (error, nextMarker, s3Objects, commonPrefixes) {
+        function (error, nextContinuationToken, s3Objects, commonPrefixes) {
           sinon.assert.calledWith(
-            s3Client.listObjects,
+            s3Client.listObjectsV2,
             {
               Bucket: options.bucket,
               Delimiter: options.delimiter,
-              Marker: options.marker,
+              ContinuationToken: options.continuationToken,
               MaxKeys: options.maxKeys,
               Prefix: options.prefix
             },
             sinon.match.func
           );
 
-          expect(nextMarker).to.eql(listCommonPrefixesResponse1.NextMarker);
-          expect(commonPrefixes).to.eql(listCommonPrefixesResponse1.CommonPrefixes);
-          expect(s3Objects).to.eql(listCommonPrefixesResponse1.Contents);
+          expect(nextContinuationToken).to.eql(listObjectsResponse1.NextContinuationToken);
+          expect(commonPrefixes).to.eql(_.map(listObjectsResponse1.CommonPrefixes, function (obj) {
+            return obj.Prefix;
+          }));
+          expect(s3Objects).to.eql(listObjectsResponse1.Contents);
 
           done(error);
         }
@@ -108,14 +106,14 @@ describe('lib/stream/s3ConcurrentListObjectStream', function () {
     });
 
     it('yields error on API error', function (done) {
-      s3Client.listObjects.onCall(0).yields(new Error());
-      s3Client.listObjects.onCall(1).yields(new Error());
-      s3Client.listObjects.onCall(2).yields(new Error());
+      s3Client.listObjectsV2.onCall(0).yields(new Error());
+      s3Client.listObjectsV2.onCall(1).yields(new Error());
+      s3Client.listObjectsV2.onCall(2).yields(new Error());
 
-      s3ConcurrentListObjectStream.listCommonPrefixesPage(
+      s3ConcurrentListObjectStream.listDirectoryPage(
         options,
-        function (error, nextMarker, commonPrefixes) {
-          sinon.assert.callCount(s3Client.listObjects, 3);
+        function (error, nextContinuationToken, commonPrefixes) {
+          sinon.assert.callCount(s3Client.listObjectsV2, 3);
           expect(error).to.be.instanceOf(Error);
           done();
         }
@@ -123,7 +121,7 @@ describe('lib/stream/s3ConcurrentListObjectStream', function () {
     });
   });
 
-  describe('listCommonPrefixes', function () {
+  describe('listDirectoryAndRecuse', function () {
     var options;
 
     beforeEach(function () {
@@ -134,39 +132,59 @@ describe('lib/stream/s3ConcurrentListObjectStream', function () {
         prefix: prefix,
         maxKeys: 50
       };
+
+      sandbox.stub(s3ConcurrentListObjectStream.queue, 'push');
     });
 
     it('functions as expected', function (done) {
-      s3ConcurrentListObjectStream.listCommonPrefixes(
+      s3ConcurrentListObjectStream.listDirectoryAndRecuse(
         options,
-        function (error, commonPrefixes) {
-          sinon.assert.callCount(s3Client.listObjects, 2);
+        function (error) {
+          sinon.assert.callCount(s3Client.listObjectsV2, 2);
 
-          expect(s3Client.listObjects.getCall(0).args[0]).to.eql({
+          expect(s3Client.listObjectsV2.getCall(0).args[0]).to.eql({
             Bucket: options.bucket,
             Delimiter: options.delimiter,
-            Marker: undefined,
+            ContinuationToken: undefined,
             MaxKeys: options.maxKeys,
             Prefix: options.prefix
           });
-          expect(s3Client.listObjects.getCall(1).args[0]).to.eql({
+          expect(s3Client.listObjectsV2.getCall(1).args[0]).to.eql({
             Bucket: options.bucket,
             Delimiter: options.delimiter,
-            Marker: listCommonPrefixesResponse1.NextMarker,
+            ContinuationToken: listObjectsResponse1.NextContinuationToken,
             MaxKeys: options.maxKeys,
             Prefix: options.prefix
           });
 
-          sinon.assert.callCount(s3ConcurrentListObjectStream.push, 2);
+          sinon.assert.callCount(s3ConcurrentListObjectStream.push, 3);
 
           expect(s3ConcurrentListObjectStream.push.getCall(0).args).to.eql([
-            listCommonPrefixesResponse1.Contents[0]
+            listObjectsResponse1.Contents[0]
           ]);
           expect(s3ConcurrentListObjectStream.push.getCall(1).args).to.eql([
-            listCommonPrefixesResponse1.Contents[1]
+            listObjectsResponse1.Contents[1]
+          ]);
+          expect(s3ConcurrentListObjectStream.push.getCall(2).args).to.eql([
+            listObjectsResponse2.Contents[0]
           ]);
 
-          expect(commonPrefixes).to.eql(allCommonPrefixes);
+          sinon.assert.callCount(s3ConcurrentListObjectStream.queue.push, 2);
+
+          expect(s3ConcurrentListObjectStream.queue.push.getCall(0).args[0]).to.eql({
+            s3Client: s3Client,
+            bucket: 'bucket',
+            delimiter: '/',
+            prefix: prefix + 'b/',
+            maxKeys: 50
+          });
+          expect(s3ConcurrentListObjectStream.queue.push.getCall(1).args[0]).to.eql({
+            s3Client: s3Client,
+            bucket: 'bucket',
+            delimiter: '/',
+            prefix: prefix + 'c/',
+            maxKeys: 50
+          });
 
           done(error);
         }
@@ -174,77 +192,14 @@ describe('lib/stream/s3ConcurrentListObjectStream', function () {
     });
 
     it('retries and yields error on API error', function (done) {
-      s3Client.listObjects.onCall(0).yields(new Error());
-      s3Client.listObjects.onCall(1).yields(new Error());
-      s3Client.listObjects.onCall(2).yields(new Error());
+      s3Client.listObjectsV2.onCall(0).yields(new Error());
+      s3Client.listObjectsV2.onCall(1).yields(new Error());
+      s3Client.listObjectsV2.onCall(2).yields(new Error());
 
-      s3ConcurrentListObjectStream.listCommonPrefixes(
+      s3ConcurrentListObjectStream.listDirectoryAndRecuse(
         options,
         function (error, commonPrefixes) {
-          sinon.assert.callCount(s3Client.listObjects, 3);
-          expect(error).to.be.instanceOf(Error);
-          done();
-        }
-      );
-    });
-  });
-
-  describe('listObjectsConcurrently', function () {
-    var options;
-
-    beforeEach(function () {
-      options = {
-        s3Client: s3Client,
-        bucket: 'bucket',
-        commonPrefixes: allCommonPrefixes,
-        delimiter: '/',
-        prefix: prefix,
-        maxConcurrency: 10,
-        maxKeys: 50
-      };
-    });
-
-    it('functions as expected', function (done) {
-      s3ConcurrentListObjectStream.listObjectsConcurrently(
-        options,
-        function (error) {
-          sinon.assert.callCount(
-            s3ConcurrentListObjectStream.listObjects,
-            allCommonPrefixes.length
-          );
-
-          // Ordering is random, so don't know which call gets which prefix.
-          // Check one.
-          sinon.assert.calledWith(
-            s3ConcurrentListObjectStream.listObjects,
-            sinon.match.object,
-            sinon.match.func
-          );
-
-          var argOpts = s3ConcurrentListObjectStream.listObjects.getCall(0).args[0];
-          var possiblePrefixes = [
-            'prefix/a/z/',
-            'prefix/b/y/',
-            'prefix/c/x/',
-            'prefix/d/w/',
-          ];
-          expect(argOpts.s3Client).to.equal(options.s3Client);
-          expect(argOpts.bucket).to.equal(options.bucket);
-          expect(argOpts.delimiter).to.equal(options.delimiter);
-          expect(possiblePrefixes).to.include(argOpts.prefix);
-          expect(argOpts.maxKeys).to.equal(options.maxKeys);
-
-          done(error);
-        }
-      );
-    });
-
-    it('yields error on listObjects error', function (done) {
-      s3ConcurrentListObjectStream.listObjects.yields(new Error());
-
-      s3ConcurrentListObjectStream.listObjectsConcurrently(
-        options,
-        function (error) {
+          sinon.assert.callCount(s3Client.listObjectsV2, 3);
           expect(error).to.be.instanceOf(Error);
           done();
         }
@@ -262,46 +217,27 @@ describe('lib/stream/s3ConcurrentListObjectStream', function () {
         prefix: prefix
       };
 
-      sandbox.stub(s3ConcurrentListObjectStream, 'listCommonPrefixes').yields(
-        null,
-        allCommonPrefixes
-      );
-      sandbox.stub(s3ConcurrentListObjectStream, 'listObjectsConcurrently').yields();
+      sandbox.stub(s3ConcurrentListObjectStream.queue, 'push');
     });
 
     it('functions as expected', function (done) {
       s3ConcurrentListObjectStream.processIncomingObject(options, function (error) {
-
-        sinon.assert.calledWith(
-          s3ConcurrentListObjectStream.listCommonPrefixes,
-          sinon.match.object,
-          sinon.match.func
-        );
-
-        var argOpts = s3ConcurrentListObjectStream.listCommonPrefixes.getCall(0).args[0];
-        expect(argOpts.s3Client).to.equal(options.s3Client);
-        expect(argOpts.bucket).to.equal(options.bucket);
-        expect(argOpts.delimiter).to.equal(options.delimiter);
-        expect(argOpts.maxKeys).to.equal(options.maxKeys);
-        expect(argOpts.prefix).to.equal(options.prefix);
-
-        sinon.assert.calledWith(
-          s3ConcurrentListObjectStream.listObjectsConcurrently,
-          sinon.match.object,
-          sinon.match.func
-        );
-
-        argOpts = s3ConcurrentListObjectStream.listObjectsConcurrently.getCall(0).args[0];
-        expect(argOpts.s3Client).to.equal(options.s3Client);
-        expect(argOpts.bucket).to.equal(options.bucket);
-        expect(argOpts.commonPrefixes).to.equal(allCommonPrefixes);
-        expect(argOpts.delimiter).to.equal(options.delimiter);
-        expect(argOpts.maxKeys).to.equal(options.maxKeys);
-        expect(argOpts.prefix).to.equal(options.prefix);
-
         done(error);
       });
 
+      sinon.assert.calledWith(
+        s3ConcurrentListObjectStream.queue.push,
+        sinon.match.object,
+        sinon.match.func
+      );
+
+      var argOpts = s3ConcurrentListObjectStream.queue.push.getCall(0).args[0];
+      expect(argOpts.s3Client).to.equal(options.s3Client);
+      expect(argOpts.bucket).to.equal(options.bucket);
+      expect(argOpts.delimiter).to.equal('/');
+      expect(argOpts.prefix).to.equal(options.prefix);
+
+      s3ConcurrentListObjectStream.queue.drain();
     });
 
     it('yields error for missing options', function (done) {

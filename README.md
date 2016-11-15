@@ -72,15 +72,17 @@ Objects emitted by the stream have the standard format, with the addition of a
 ## S3ConcurrentListObjectStream
 
 This works in the same way as the `S3ListObjectStream`, but under the hood it
-splits up the bucket by common prefixes and then lists objects under each
-common prefix concurrently. This is usually much faster, provided the keys in
-the bucket have a decent number of common prefixes.
+splits up the bucket by common prefixes and then recursively lists objects under
+each common prefix concurrently, up to the maximum specified concurrency.
 
 ```js
 var AWS = require('aws-sdk');
 var s3ObjectStreams = require('s3-object-streams');
 
-var s3ConcurrentListObjectStream = new s3ObjectStreams.S3ConcurrentListObjectStream();
+var s3ConcurrentListObjectStream = new s3ObjectStreams.S3ConcurrentListObjectStream({
+  // Optional, defaults to 15.
+  maxConcurrency: 15
+});
 var s3Client = new AWS.S3();
 
 // Log all of the listed objects.
@@ -100,8 +102,6 @@ s3ConcurrentListObjectStream.write({
   bucket: 'exampleBucket1',
   // Optional, only list keys with the given prefix.
   prefix: 'examplePrefix/',
-  // Optional, defaults to 10.
-  maxConcurrency: 10,
   // Optional, defaults to 1000. The number of objects per request.
   maxKeys: 1000
 });
