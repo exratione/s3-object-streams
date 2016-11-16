@@ -50,6 +50,10 @@ describe('lib/stream/S3UsageStream', function () {
               count: 1,
               size: 10
             },
+            STANDARD_IA: {
+              count: 0,
+              size: 0
+            },
             REDUCED_REDUNDANCY: {
               count: 0,
               size: 0
@@ -67,6 +71,10 @@ describe('lib/stream/S3UsageStream', function () {
               count: 1,
               size: 10
             },
+            STANDARD_IA: {
+              count: 0,
+              size: 0
+            },
             REDUCED_REDUNDANCY: {
               count: 0,
               size: 0
@@ -83,6 +91,10 @@ describe('lib/stream/S3UsageStream', function () {
             STANDARD: {
               count: 1,
               size: 10
+            },
+            STANDARD_IA: {
+              count: 0,
+              size: 0
             },
             REDUCED_REDUNDANCY: {
               count: 0,
@@ -103,6 +115,10 @@ describe('lib/stream/S3UsageStream', function () {
               count: 2,
               size: 30
             },
+            STANDARD_IA: {
+              count: 0,
+              size: 0
+            },
             REDUCED_REDUNDANCY: {
               count: 0,
               size: 0
@@ -120,6 +136,10 @@ describe('lib/stream/S3UsageStream', function () {
               count: 2,
               size: 30
             },
+            STANDARD_IA: {
+              count: 0,
+              size: 0
+            },
             REDUCED_REDUNDANCY: {
               count: 0,
               size: 0
@@ -136,6 +156,10 @@ describe('lib/stream/S3UsageStream', function () {
             STANDARD: {
               count: 2,
               size: 30
+            },
+            STANDARD_IA: {
+              count: 0,
+              size: 0
             },
             REDUCED_REDUNDANCY: {
               count: 0,
@@ -156,6 +180,10 @@ describe('lib/stream/S3UsageStream', function () {
               count: 2,
               size: 30
             },
+            STANDARD_IA: {
+              count: 0,
+              size: 0
+            },
             REDUCED_REDUNDANCY: {
               count: 0,
               size: 0
@@ -173,6 +201,10 @@ describe('lib/stream/S3UsageStream', function () {
               count: 2,
               size: 30
             },
+            STANDARD_IA: {
+              count: 0,
+              size: 0
+            },
             REDUCED_REDUNDANCY: {
               count: 0,
               size: 0
@@ -189,6 +221,10 @@ describe('lib/stream/S3UsageStream', function () {
             STANDARD: {
               count: 2,
               size: 30
+            },
+            STANDARD_IA: {
+              count: 0,
+              size: 0
             },
             REDUCED_REDUNDANCY: {
               count: 0,
@@ -234,6 +270,10 @@ describe('lib/stream/S3UsageStream', function () {
                 STANDARD: {
                   count: 1,
                   size: 10
+                },
+                STANDARD_IA: {
+                  count: 0,
+                  size: 0
                 },
                 REDUCED_REDUNDANCY: {
                   count: 0,
