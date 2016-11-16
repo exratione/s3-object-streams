@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1
+
+  * Add missing STANDARD_IA storage class.
+
 ## 0.6.0
 
   * A better algorithm for concurrent listing.
