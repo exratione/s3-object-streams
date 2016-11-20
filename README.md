@@ -190,6 +190,10 @@ The running total objects emitted by the stream have the following format:
       // Total size in bytes of files in this storage class.
       size: 1232983
     },
+    STANDARD_IA: {
+      count: 0,
+      size: 0
+    },
     REDUCED_REDUNDANCY: {
       count: 2,
       size: 5638
