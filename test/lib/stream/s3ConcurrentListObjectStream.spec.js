@@ -41,10 +41,8 @@ describe('lib/stream/s3ConcurrentListObjectStream', function () {
     };
     listObjectsResponse2 = {
       IsTruncated: false,
-      CommonPrefixes: [
-        { Prefix: prefix + 'b/' },
-        { Prefix: prefix + 'c/' }
-      ],
+      // The prefixes listed already won't appear again.
+      CommonPrefixes: [],
       Contents: [
         {
           Key: prefix + 'a3'
