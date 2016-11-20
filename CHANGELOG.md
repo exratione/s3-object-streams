@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.2
+
+  * Fix possible problem resulting from mistaken assumption about API behavior.
+
 ## 0.6.1
 
   * Add missing STANDARD_IA storage class.
