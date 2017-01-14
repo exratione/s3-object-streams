@@ -1,9 +1,15 @@
 # S3 Object Streams
 
 A small Node.js package that can be helpful when performing operations on very
-large S3 buckets, those containing millions of objects or more. Streaming the
-listed contents keeps memory under control and using the Streams API allows for
-fairly compact utility code.
+large S3 buckets, those containing millions of objects or more, or when
+processing S3 Inventory listings for those buckets. Streaming the listed
+contents keeps memory under control and using the Streams API allows for fairly
+compact utility code.
+
+  * [S3ListObjectStream](#s3listobjectstream)
+  * [S3ConcurrentListObjectStream](#s3concurrentlistobjectstream)
+  * [S3UsageStream](#s3usagestream)
+  * [S3InventoryUsageStream](#s3inventoryusagestream)
 
 ## Installing
 
@@ -176,6 +182,100 @@ s3ListObjectStream.write({
   bucket: 'exampleBucket2'
 });
 s3ListObjectStream.end();
+```
+
+The running total objects emitted by the stream have the following format:
+
+```js
+{
+  path: 'exampleBucket/folder1',
+  storageClass: {
+    STANDARD: {
+      // The number of files of this storage class.
+      count: 55,
+      // Total size in bytes of files in this storage class.
+      size: 1232983
+    },
+    STANDARD_IA: {
+      count: 0,
+      size: 0
+    },
+    REDUCED_REDUNDANCY: {
+      count: 2,
+      size: 5638
+    },
+    GLACIER: {
+      count: 0,
+      size: 0
+    }
+  }
+}
+```
+
+## S3InventoryUsageStream
+
+A stream for keeping a running total of count and size of S3 objects by bucket
+and key prefix, accepting objects from an S3 Inventory CSV file rather than
+from the `listObjects` API endpoint.
+
+```js
+// Core.
+var fs = require('fs');
+var zlib = require('zlib');
+
+// NPM.
+var csv = require('csv');
+var _ = require('lodash');
+var s3ObjectStreams = require('s3-object-streams');
+
+// Assuming that we already have the manifest JSON and a gzipped CSV data file
+// downloaded from S3:
+var manifest = require('/path/to/manifest.json');
+var readStream = fs.createReadStream('/path/to/data.csv.gz');
+
+var s3InventoryUsageStream = new s3ObjectStreams.S3InventoryUsageStream({
+  // Determine folders from keys with this delimiter.
+  delimiter: '/',
+  // Group one level deep into the folders.
+  depth: 1,
+  // Only send a running total once every 100 objects.
+  outputFactor: 100
+});
+
+var runningTotals;
+
+// Log all of the listed objects.
+s3UsageStream.on('data', function (totals) {
+  runningTotals = totals;
+  console.info(JSON.stringify(runningTotals, null, '  '));
+});
+
+var complete = _.once(function (error) {
+  if (error) {
+    console.error(error);
+  }
+  else {
+    console.info('Complete');
+  }
+});
+
+var gunzip = zlib.createGunzip();
+var csvParser = csv.parse({
+  // The manifest file defines the columns for the CSV. Specifying them here
+  // ensures that the parser returns objects with properties named for the
+  // columns.
+  columns: manifest.fileSchema.split(', ')
+});
+
+csvParser.on('error', complete);
+gunzip.on('error', complete);
+readStream.on('error', complete);
+s3InventoryUsageStream.on('error', complete);
+s3InventoryUsageStream.on('end', complete);
+
+// Unzip the file on the fly, feed it to the csvParser, and then into the
+// object stream.
+readStream.pipe(gunzip).pipe(csvParser).pipe(transformer).pipe(s3InventoryUsageStream);
 ```
 
 The running total objects emitted by the stream have the following format:
