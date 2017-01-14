@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0
+
+  * Add S3InventoryUsage class.
+
 ## 0.6.2
 
   * Fix possible problem resulting from mistaken assumption about API behavior.
