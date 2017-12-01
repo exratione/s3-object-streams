@@ -84,7 +84,8 @@ describe('lib/stream/s3ListObjectStream', function () {
         bucket: 'bucket',
         prefix: 'prefix',
         marker: 'marker',
-        maxKeys: 50
+        maxKeys: 50,
+        delimiter: 'delimiter'
       };
     });
 
@@ -96,7 +97,8 @@ describe('lib/stream/s3ListObjectStream', function () {
             Bucket: options.bucket,
             Marker: options.marker,
             MaxKeys: options.maxKeys,
-            Prefix: options.prefix
+            Prefix: options.prefix,
+            Delimiter: options.delimiter
           },
           sinon.match.func
         );
@@ -126,7 +128,8 @@ describe('lib/stream/s3ListObjectStream', function () {
       options = {
         s3Client: s3Client,
         bucket: 'bucket',
-        prefix: 'prefix'
+        prefix: 'prefix',
+        delimiter: 'delimiter'
       }
     });
 
@@ -141,13 +144,15 @@ describe('lib/stream/s3ListObjectStream', function () {
           Bucket: options.bucket,
           Marker: undefined,
           MaxKeys: 1000,
-          Prefix: options.prefix
+          Prefix: options.prefix,
+          Delimiter: options.delimiter
         });
         expect(s3Client.listObjects.getCall(1).args[0]).to.eql({
           Bucket: options.bucket,
           Marker: listObjectResponse1.Contents[1].Key,
           MaxKeys: 1000,
-          Prefix: options.prefix
+          Prefix: options.prefix,
+          Delimiter: options.delimiter
         });
 
         expect(s3ListObjectStream.push.getCall(0).args).to.eql([
