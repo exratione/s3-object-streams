@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0
+
+  * Add delimiter option to S3ListObjectStream class.
+
 ## 0.7.0
 
   * Add S3InventoryUsage class.
