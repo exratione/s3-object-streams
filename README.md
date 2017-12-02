@@ -6,6 +6,8 @@ processing S3 Inventory listings for those buckets. Streaming the listed
 contents keeps memory under control and using the Streams API allows for fairly
 compact utility code.
 
+For very large buckets, S3 Inventory is always a better choice.
+
   * [S3ListObjectStream](#s3listobjectstream)
   * [S3ConcurrentListObjectStream](#s3concurrentlistobjectstream)
   * [S3UsageStream](#s3usagestream)
@@ -48,6 +50,8 @@ s3ListObjectStream.write({
   bucket: 'exampleBucket1',
   // Optional, only list keys with the given prefix.
   prefix: 'examplePrefix/',
+  // Optional, group keys using a delimiter.
+  // delimiter: '/',
   // Optional, defaults to 1000. The number of objects per request.
   maxKeys: 1000
 });
@@ -108,6 +112,8 @@ s3ConcurrentListObjectStream.write({
   bucket: 'exampleBucket1',
   // Optional, only list keys with the given prefix.
   prefix: 'examplePrefix/',
+  // Optional, group keys using a delimiter.
+  // delimiter: '/',
   // Optional, defaults to 1000. The number of objects per request.
   maxKeys: 1000
 });
