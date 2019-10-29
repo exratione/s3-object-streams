@@ -6,7 +6,7 @@
     "s3",
     "stream"
   ],
-  "version": "0.8.0",
+  "version": "0.8.1",
   "homepage": "https://github.com/exratione/s3-object-streams",
   "author": "Reason <reason@exratione.com>",
   "engines": {
