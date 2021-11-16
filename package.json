@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "async": "2.1.2",
-    "aws-sdk": "2.559.0",
+    "aws-sdk": "2.814.0",
     "lodash": "4.17.15"
   },
   "devDependencies": {
